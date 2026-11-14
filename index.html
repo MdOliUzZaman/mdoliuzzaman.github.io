@@ -238,8 +238,7 @@ a { color: inherit; }
 .hero h1.draw .swoosh .b3 { animation: sw-draw 1s cubic-bezier(.45,.05,.25,1) 1.35s forwards; }
 @keyframes sw-draw { from { opacity: 1; } to { stroke-dashoffset: 0; opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .swoosh path, .hero h1.draw .swoosh path { animation: none; stroke-dashoffset: 0; opacity: 1; } }
-.hero-art { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; filter: blur(0.9px); opacity: 0; transition: opacity .6s ease; }
-.hero-art.ready { opacity: 0.95; }
+.hero-art { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; filter: blur(0.9px); opacity: 0.95; }
 .hero p { font-size: clamp(16px, 1.8vw, 19px); max-width: 46ch; margin: 18px 0 0; opacity: 0.92; }
 .hero .socials { display: flex; align-items: center; gap: 26px; margin-top: 34px; }
 .socials a { display: grid; place-items: center; width: 30px; height: 30px; color: var(--ic, #0e2a47); transition: color .2s, transform .2s; }
@@ -1029,9 +1028,10 @@ body.reading > :not(#resume-view):not(script):not(style) { display: none !import
     // draw once, after the brain image and fonts are ready, then let the name underline start
     const fontsReady = (document.fonts && document.fonts.ready) ? document.fonts.ready : Promise.resolve();
     const cap = (p, ms) => Promise.race([p, new Promise(r => setTimeout(r, ms))]);
-    Promise.all([cap(brainReady, 1500), cap(fontsReady, 700)]).then(() => {
-      const t0 = performance.now(); draw(); window.__heroDrawMs = performance.now() - t0; cv.classList.add("ready"); requestAnimationFrame(() => setTimeout(() => dispatchEvent(new Event("heroart")), 60));
-    });
+    // draw straight away with the page; redraw (about 30 ms) when the brain picture and fonts arrive
+    draw(); cv.classList.add("ready");
+    brainReady.then(draw); fontsReady.then(draw);
+    Promise.all([cap(brainReady, 1500), cap(fontsReady, 700)]).then(() => requestAnimationFrame(() => setTimeout(() => dispatchEvent(new Event("heroart")), 60)));
     let t; addEventListener("resize", () => { clearTimeout(t); t = setTimeout(draw, 150); });
   })();
   /* ---------- Apple-style scroll motion ---------- */
